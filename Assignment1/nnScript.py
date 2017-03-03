@@ -188,11 +188,39 @@ def nnObjFunction(params, *args):
     obj_val = 0
 
     # Your code here
-    #
-    #
-    #
-    #
-    #
+    a = []
+    z = []
+
+    b = []
+    """
+    index = 0
+    for i, x in enumerate(train_data):
+        index += 1
+    print(index)
+
+    # for i,x in enumerate(w1):
+    #   print(i,x)
+
+    print(len(w1))
+    print(len(w1[1]))
+    print(len(train_data))
+    print(len(train_data[0]))
+
+    #n_class = 10
+    #n_hidden = 50
+    #n_input = 784
+
+    w1 row =50
+    w1 column =785
+    td row = 50000
+    td column = 784
+    """
+
+    for x in range(0, n_hidden):
+        a.append(np.dot(w1[x][:-1], train_data[x]))
+        z.append(sigmoid(a[x]))
+    print(a)
+    print(z)
 
     # Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     # you would use code similar to the one below to create a flat array
