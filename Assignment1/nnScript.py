@@ -248,7 +248,32 @@ def nnPredict(w1, w2, data):
     % label: a column vector of predicted labels"""
 
     labels = np.array([])
-    # Your code here
+   
+    labels = np.array([])
+    "%Create Bias for Data"
+    bias = np.ones(len(data),1)
+    "%Add Bias to Data"
+    data = np.hstack(bias,data)
+    
+    aj = np.dot(w1.T,data)
+    zj = sigmoid(aj)
+    
+    print("AJ is: " + aj)
+    print("ZJ is: " + zj)
+    
+    "%create bias for zj"
+    bias2 = np.ones(len(data),1)
+    "%add bias to zj"
+    zj = np.hstack(bias2,zj)
+    
+    bl = np.dot(w2.T,zj)
+    ol = sigmoid(bl)
+    
+    print("BL is: " + bl)
+    print("ol is: " + ol)
+    
+    #still need to predict labels
+
 
     return labels
 
