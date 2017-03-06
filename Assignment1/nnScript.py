@@ -248,8 +248,7 @@ def nnPredict(w1, w2, data):
     % label: a column vector of predicted labels"""
 
     labels = np.array([])
-   
-    labels = np.array([])
+
     "%Create Bias for Data"
     bias = np.ones(len(data),1)
     "%Add Bias to Data"
@@ -270,7 +269,7 @@ def nnPredict(w1, w2, data):
     ol = sigmoid(bl)
     
     print("BL is: " + bl)
-    print("ol is: " + ol)
+    print("OL is: " + ol)
     
     #still need to predict labels
 
