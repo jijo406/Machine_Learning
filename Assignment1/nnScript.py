@@ -26,6 +26,21 @@ def sigmoid(z):
 
     return 1.0/(1.0+np.exp(-z))  # your code here
 
+def FeedFoward(w1,w2,data):
+    #get bias
+    bias = np.ones(data.shape[0])
+    #add bias
+    data = np.column_stack((data,bias))
+    #feed hidden
+    zj = sigmoid(np.dot(data,w1.T))
+    #z bias
+    bias = np.ones(zj.shape[0])
+    #add bias
+    zj = np.column_stack((zj,bias))
+    #feed output
+    ol = sigmoid(np.dot(zj,w2.T))
+
+    return zj , ol  
 
 def preprocess():
     """ Input:
@@ -130,14 +145,20 @@ def preprocess():
     x = len(train_data[1])
     i = 1
     while i != x:
-        if np.std(train_data[:,i]) < 0.05:
-            train_data = np.delete(train_data,i,1)
-            validation_data = np.delete(validation_data,i,1)
-            test_data = np.delete(test_data,i,1)
+        if np.std(train_data[:,i]) < 0.05 and np.std(validation_data[:,i]) < 0.05:
+            #train_data = np.delete(train_data,i,1)
+            #validation_data = np.delete(validation_data,i,1)
+            #test_data = np.delete(test_data,i,1)
             x = len(train_data[1])
             c.append(i)
         i += 1
+    
 
+    train_data = np.delete(train_data,c, axis = 1)
+    validation_data = np.delete(validation_data,c, axis = 1)
+    test_data = np.delete(test_data,c, axis = 1)
+    
+    print(len(train_data[0]))
     print('preprocess done')
 
     return train_data, train_label, validation_data, validation_label, test_data, test_label
@@ -188,10 +209,21 @@ def nnObjFunction(params, *args):
     obj_val = 0
 
     # Your code here
-    a = []
-    z = []
+    #a = []
+    #z = []
 
-    b = []
+    #b = []
+    
+    zj,ol = FeedFoward(w1,w2,training_data)
+    
+    
+    training_label = np.zeros((len(training_data),10))
+        
+    
+    #back propagation 
+    delta = np.subtract(ol,training_label)
+    
+    gradw2 = np.dot(delta.T,zj)
     """
     index = 0
     for i, x in enumerate(train_data):
