@@ -228,7 +228,7 @@ def nnObjFunction(params, *args):
     oil1 = np.log(ol)
     yil1 = training_label
     firstpt = np.multiply(yil1,oil1)
-    oil2 = np.subtract(np.log(1.0,ol))
+    oil2 = np.log(np.subtract(1.0,ol))
     yil2 = np.subtract(1.0,training_label)
     secondpt = np.multiply(yil2,oil2)
     ji = np.sum(-1*(firstpt + secondpt))
