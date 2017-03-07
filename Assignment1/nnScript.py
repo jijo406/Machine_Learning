@@ -30,17 +30,17 @@ def FeedFoward(w1,w2,data):
     #get bias
     bias = np.ones(data.shape[0])
     #add bias
-    data = np.column_stack((data,bias))
+    data = np.column_stack([data,bias])
     #feed hidden
     zj = sigmoid(np.dot(data,w1.T))
-    #z bias
-    bias = np.ones(zj.shape[0])
+    #zj bias
+    bias2 = np.ones(zj.shape[0])
     #add bias
-    zj = np.column_stack((zj,bias))
+    zj = np.column_stack([zj, bias2])
     #feed output
     ol = sigmoid(np.dot(zj,w2.T))
 
-    return zj , ol  
+    return zj, ol  
 
 def preprocess():
     """ Input:
@@ -142,24 +142,15 @@ def preprocess():
     # Your code here.
     # print(len(test_data))
     c = []
-    x = len(train_data[1])
-    i = 1
-    while i != x:
-        if np.std(train_data[:,i]) < 0.05 and np.std(validation_data[:,i]) < 0.05:
-            #train_data = np.delete(train_data,i,1)
-            #validation_data = np.delete(validation_data,i,1)
-            #test_data = np.delete(test_data,i,1)
-            x = len(train_data[1])
-            c.append(i)
-        i += 1
+    for i in range(len(train_data[1])):
+            if np.std(train_data[:,i]) < 0.05 and np.std(validation_data[:,i]) < 0.05:
+                c.append(i)
     
 
     train_data = np.delete(train_data,c, axis = 1)
     validation_data = np.delete(validation_data,c, axis = 1)
     test_data = np.delete(test_data,c, axis = 1)
     
-    print(len(train_data[0]))
-    print('preprocess done')
 
     return train_data, train_label, validation_data, validation_label, test_data, test_label
 
@@ -215,15 +206,44 @@ def nnObjFunction(params, *args):
     #b = []
     
     zj,ol = FeedFoward(w1,w2,training_data)
+       
+    #training_label = np.reshape(len(training_data),10) 
+    #print(training_label)
+    #print(ol[0])
     
-    
-    training_label = np.zeros((len(training_data),10))
-        
-    
-    #back propagation 
+    index = np.arange(training_label.shape[0],dtype="int")
+    label = np.zeros((training_label.shape[0],10))
+    label[index,training_label.astype(int)]=1
+
+    training_label = label
+    #print(training_label)
+
+    #delta and gradience
     delta = np.subtract(ol,training_label)
+    #print(delta)
+    grad_w2 = np.dot(delta.T,zj)
     
-    gradw2 = np.dot(delta.T,zj)
+    #obj_val
+    n = training_data.shape[0]
+    oil1 = np.log(ol)
+    yil1 = training_label
+    firstpt = np.multiply(yil1,oil1)
+    oil2 = np.subtract(1.0,np.log(ol))
+    yil2 = np.subtract(1.0,training_label)
+    secondpt = np.multiply(yil2,oil2)
+    ji = np.sum(-1*(firstpt + secondpt))
+    obj_val = (1/n) * np.sum(ji)
+
+    #obj_val Regularization
+    
+    w1_sum = np.sum(np.square(w1)) 
+    w2_sum = np.sum(np.square(w2))
+    obj_val_reg = (lambdaval/(2*n)) * (w1_sum + w2_sum)
+
+    #final Obj_val
+    obj_val = obj_val + obj_val_reg
+    print(obj_val)
+    
     """
     index = 0
     for i, x in enumerate(train_data):
@@ -248,11 +268,11 @@ def nnObjFunction(params, *args):
     td column = 784
     """
 
-    for x in range(0, n_hidden):
+    """for x in range(0, n_hidden):
         a.append(np.dot(w1[x][:-1], train_data[x]))
         z.append(sigmoid(a[x]))
     print(a)
-    print(z)
+    print(z)"""
 
     # Make sure you reshape the gradient matrices to a 1D array. for instance if your gradient matrices are grad_w1 and grad_w2
     # you would use code similar to the one below to create a flat array
