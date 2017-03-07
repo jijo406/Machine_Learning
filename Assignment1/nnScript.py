@@ -212,7 +212,7 @@ def nnObjFunction(params, *args):
     #print(ol[0])
     
     index = np.arange(training_label.shape[0],dtype="int")
-    label = np.zeros((training_label.shape[0],10))
+    label = np.zeros((training_label.shape[0],n_class))
     label[index,training_label.astype(int)]=1
 
     training_label = label
