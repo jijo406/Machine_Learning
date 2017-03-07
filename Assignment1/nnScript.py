@@ -228,7 +228,7 @@ def nnObjFunction(params, *args):
     oil1 = np.log(ol)
     yil1 = training_label
     firstpt = np.multiply(yil1,oil1)
-    oil2 = np.subtract(1.0,np.log(ol))
+    oil2 = np.subtract(np.log(1.0,ol))
     yil2 = np.subtract(1.0,training_label)
     secondpt = np.multiply(yil2,oil2)
     ji = np.sum(-1*(firstpt + secondpt))
@@ -313,6 +313,17 @@ def nnPredict(w1, w2, data):
 train_data, train_label, validation_data, validation_label, test_data, test_label = preprocess()
 
 #  Train Neural Network
+n_input = 5
+n_hidden = 3
+n_class = 2
+training_data = np.array([np.linspace(0,1,num=5),np.linspace(1,0,num=5)])
+training_label = np.array([0,1])
+lambdaval = 0
+params = np.linspace(-5,5, num=26)
+args = (n_input, n_hidden, n_class, training_data, training_label, lambdaval)
+objval,objgrad = nnObjFunction(params, *args)
+print(objval)
+print(objgrad)
 
 # set the number of nodes in input unit (not including bias unit)
 n_input = train_data.shape[1]
