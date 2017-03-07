@@ -40,7 +40,7 @@ def FeedFoward(w1,w2,data):
     #feed output
     ol = sigmoid(np.dot(zj,w2.T))
 
-    return zj, ol  
+    return data,zj, ol  
 
 def preprocess():
     """ Input:
@@ -205,7 +205,7 @@ def nnObjFunction(params, *args):
 
     #b = []
     
-    zj,ol = FeedFoward(w1,w2,training_data)
+    training_data,zj,ol = FeedFoward(w1,w2,training_data)
        
     #training_label = np.reshape(len(training_data),10) 
     #print(training_label)
@@ -221,7 +221,19 @@ def nnObjFunction(params, *args):
     #delta and gradience
     delta = np.subtract(ol,training_label)
     #print(delta)
+    #grad_w2
     grad_w2 = np.dot(delta.T,zj)
+    
+    #grad_w1
+    #w2_pt1 = (1-zj)*zj
+    #w2_pt2 = np.dot(delta,w2)
+    #w2_pt3 = (w2_pt1 * w2_pt2)
+    #grad_w1= np.dot(w2_pt3.T,training_data)
+    grad_w1 = np.dot(((1-zj)*zj* (np.dot(delta,w2))).T,training_data)
+
+    #take care of hidden row, (Note that we do not compute the gradient for the weights at the bias hidden node.) 
+    grad_w1 = np.delete(grad_w1, n_hidden,0)
+    
     
     #obj_val
     n = training_data.shape[0]
@@ -239,10 +251,15 @@ def nnObjFunction(params, *args):
     w1_sum = np.sum(np.square(w1)) 
     w2_sum = np.sum(np.square(w2))
     obj_val_reg = (lambdaval/(2*n)) * (w1_sum + w2_sum)
+    
+    #obj_grad Regularization
+    
+    grad_w1 = (grad_w1 + (w1*lambdaval))/n
+    grad_w2 = (grad_w2 + (w2*lambdaval))/n
 
     #final Obj_val
     obj_val = obj_val + obj_val_reg
-    print(obj_val)
+    #print(obj_val)
     
     """
     index = 0
@@ -278,6 +295,8 @@ def nnObjFunction(params, *args):
     # you would use code similar to the one below to create a flat array
     # obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
     obj_grad = np.array([])
+    obj_grad = np.concatenate((grad_w1.flatten(), grad_w2.flatten()),0)
+    obj_grad = obj_grad
 
     return (obj_val, obj_grad)
 
@@ -301,7 +320,7 @@ def nnPredict(w1, w2, data):
 
     labels = np.array([])
 
-    zj, ol = FeedFoward(w1,w2,data)
+    data, zj, ol = FeedFoward(w1,w2,data)
     
     labels = np.argmax(ol, 1)
 
