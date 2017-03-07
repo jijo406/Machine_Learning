@@ -301,30 +301,9 @@ def nnPredict(w1, w2, data):
 
     labels = np.array([])
 
-    "%Create Bias for Data"
-    bias = np.ones(len(data),1)
-    "%Add Bias to Data"
-    data = np.hstack(bias,data)
+    zj, ol = FeedFoward(w1,w2,data)
     
-    aj = np.dot(w1.T,data)
-    zj = sigmoid(aj)
-    
-    print("AJ is: " + aj)
-    print("ZJ is: " + zj)
-    
-    "%create bias for zj"
-    bias2 = np.ones(len(data),1)
-    "%add bias to zj"
-    zj = np.hstack(bias2,zj)
-    
-    bl = np.dot(w2.T,zj)
-    ol = sigmoid(bl)
-    
-    print("BL is: " + bl)
-    print("OL is: " + ol)
-    
-    #still need to predict labels
-
+    labels = np.argmax(ol, 1)
 
     return labels
 
