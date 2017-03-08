@@ -142,17 +142,19 @@ def preprocess():
     # Your code here.
     # print(len(test_data))
     c = []
+    selected_feature = []
     for i in range(len(train_data[1])):
-            if np.std(train_data[:,i]) < 0.05 and np.std(validation_data[:,i]) < 0.05:
+        if np.std(train_data[:,i]) < 0.05 and np.std(validation_data[:,i]) < 0.05:
                 c.append(i)
-    
+        else: 
+            selected_feature.append(i)
 
     train_data = np.delete(train_data,c, axis = 1)
     validation_data = np.delete(validation_data,c, axis = 1)
     test_data = np.delete(test_data,c, axis = 1)
     
 
-    return train_data, train_label, validation_data, validation_label, test_data, test_label
+    return selected_feature, train_data, train_label, validation_data, validation_label, test_data, test_label
 
 
 def nnObjFunction(params, *args):
@@ -225,11 +227,11 @@ def nnObjFunction(params, *args):
     grad_w2 = np.dot(delta.T,zj)
     
     #grad_w1
-    #w2_pt1 = (1-zj)*zj
-    #w2_pt2 = np.dot(delta,w2)
-    #w2_pt3 = (w2_pt1 * w2_pt2)
-    #grad_w1= np.dot(w2_pt3.T,training_data)
-    grad_w1 = np.dot(((1-zj)*zj* (np.dot(delta,w2))).T,training_data)
+    w2_pt1 = (1-zj)*zj
+    w2_pt2 = np.dot(delta,w2)
+    w2_pt3 = (w2_pt1 * w2_pt2)
+    grad_w1= np.dot(w2_pt3.T,training_data)
+    #grad_w1 = np.dot(((1-zj)*zj* (np.dot(delta,w2))).T,training_data)
 
     #take care of hidden row, (Note that we do not compute the gradient for the weights at the bias hidden node.) 
     grad_w1 = np.delete(grad_w1, n_hidden,0)
@@ -329,10 +331,10 @@ def nnPredict(w1, w2, data):
 
 """**************Neural Network Script Starts here********************************"""
 
-train_data, train_label, validation_data, validation_label, test_data, test_label = preprocess()
+selected_features, train_data, train_label, validation_data, validation_label, test_data, test_label = preprocess()
 
 #  Train Neural Network
-n_input = 5
+"""n_input = 5
 n_hidden = 3
 n_class = 2
 training_data = np.array([np.linspace(0,1,num=5),np.linspace(1,0,num=5)])
@@ -343,6 +345,7 @@ args = (n_input, n_hidden, n_class, training_data, training_label, lambdaval)
 objval,objgrad = nnObjFunction(params, *args)
 print(objval)
 print(objgrad)
+"""
 
 # set the number of nodes in input unit (not including bias unit)
 n_input = train_data.shape[1]
@@ -361,7 +364,8 @@ initial_w2 = initializeWeights(n_hidden, n_class)
 initialWeights = np.concatenate((initial_w1.flatten(), initial_w2.flatten()), 0)
 
 # set the regularization hyper-parameter
-lambdaval = 0
+for i in range(0,60):
+    lambdaval = i
 
 args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
 
@@ -399,3 +403,10 @@ predicted_label = nnPredict(w1, w2, test_data)
 # find the accuracy on Validation Dataset
 
 print('\n Test set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
+
+obj = [selected_features, n_hidden, w1, w2, lambdaval]
+# selected_features is a list of feature indices that you use after removing unwanted features in feature selection step
+import pickle
+
+pickle.dump(obj, open('params.pickle', 'wb'))
+
