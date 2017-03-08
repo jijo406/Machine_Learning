@@ -1,7 +1,11 @@
+import operator
+import sys
 import numpy as np
 from scipy.optimize import minimize
 from scipy.io import loadmat
 from math import sqrt
+import time 
+import matplotlib.pyplot as plt
 
 def initializeWeights(n_in, n_out):
     """
@@ -346,67 +350,162 @@ objval,objgrad = nnObjFunction(params, *args)
 print(objval)
 print(objgrad)
 """
+p_test = 0
+p_val = 0
+p_train = 0
+n_hid = [4,8,12,16,20,50]
+timehid = []
+
+lam = []
+acur = []
+timeboth = []
+acurboth = []
+lamhid = []
 
 # set the number of nodes in input unit (not including bias unit)
 n_input = train_data.shape[1]
 
-# set the number of nodes in hidden unit (not including bias unit)
-n_hidden = 50
+for h in n_hid:
+	start_time = time.time()
+	
+	# set the number of nodes in hidden unit (not including bias unit)
+	n_hidden = h
 
-# set the number of nodes in output unit
-n_class = 10
+	# set the number of nodes in output unit
+	n_class = 10
 
-# initialize the weights into some random matrices
-initial_w1 = initializeWeights(n_input, n_hidden)
-initial_w2 = initializeWeights(n_hidden, n_class)
+	# initialize the weights into some random matrices
+	initial_w1 = initializeWeights(n_input, n_hidden)
+	initial_w2 = initializeWeights(n_hidden, n_class)
 
-# unroll 2 weight matrices into single column vector
-initialWeights = np.concatenate((initial_w1.flatten(), initial_w2.flatten()), 0)
+	# unroll 2 weight matrices into single column vector
+	initialWeights = np.concatenate((initial_w1.flatten(), initial_w2.flatten()), 0)
 
-# set the regularization hyper-parameter
-for i in range(0,60):
-    lambdaval = i
+	# set the regularization hyper-parameter
+	for i in range(0,60):
+		lambdaval = i*5
+		if lambdaval == 65:
+			break
+		args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
 
-args = (n_input, n_hidden, n_class, train_data, train_label, lambdaval)
+		# Train Neural Network using fmin_cg or minimize from scipy,optimize module. Check documentation for a working example
 
-# Train Neural Network using fmin_cg or minimize from scipy,optimize module. Check documentation for a working example
+		opts = {'maxiter': 50}  # Preferred value.
 
-opts = {'maxiter': 50}  # Preferred value.
+		nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args, method='CG', options=opts)
 
-nn_params = minimize(nnObjFunction, initialWeights, jac=True, args=args, method='CG', options=opts)
-
-# In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
-# and nnObjGradient. Check documentation for this function before you proceed.
-# nn_params, cost = fmin_cg(nnObjFunctionVal, initialWeights, nnObjGradient,args = args, maxiter = 50)
+		# In Case you want to use fmin_cg, you may have to split the nnObjectFunction to two functions nnObjFunctionVal
+		# and nnObjGradient. Check documentation for this function before you proceed.
+		# nn_params, cost = fmin_cg(nnObjFunctionVal, initialWeights, nnObjGradient,args = args, maxiter = 50)
 
 
-# Reshape nnParams from 1D vector into w1 and w2 matrices
-w1 = nn_params.x[0:n_hidden * (n_input + 1)].reshape((n_hidden, (n_input + 1)))
-w2 = nn_params.x[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
+		# Reshape nnParams from 1D vector into w1 and w2 matrices
+		w1 = nn_params.x[0:n_hidden * (n_input + 1)].reshape((n_hidden, (n_input + 1)))
+		w2 = nn_params.x[(n_hidden * (n_input + 1)):].reshape((n_class, (n_hidden + 1)))
 
-# Test the computed parameters
+		# Test the computed parameters
 
-predicted_label = nnPredict(w1, w2, train_data)
+		predicted_label = nnPredict(w1, w2, train_data)
 
-# find the accuracy on Training Dataset
+		# find the accuracy on Training Dataset
 
-print('\n Training set Accuracy:' + str(100 * np.mean((predicted_label == train_label).astype(float))) + '%')
+		print('\n Training set Accuracy:' + str(100 * np.mean((predicted_label == train_label).astype(float))) + '%')
+		train = 100 * np.mean((predicted_label == train_label).astype(float)) 	
+			
+	
+		predicted_label = nnPredict(w1, w2, validation_data)
 
-predicted_label = nnPredict(w1, w2, validation_data)
+		# find the accuracy on Validation Dataset
 
-# find the accuracy on Validation Dataset
+		print('\n Validation set Accuracy:' + str(100 * np.mean((predicted_label == validation_label).astype(float))) + '%')
+		validation = 100 * np.mean((predicted_label == validation_label).astype(float))
+			
+		
+		predicted_label = nnPredict(w1, w2, test_data)
 
-print('\n Validation set Accuracy:' + str(100 * np.mean((predicted_label == validation_label).astype(float))) + '%')
+		# find the accuracy on Validation Dataset
 
-predicted_label = nnPredict(w1, w2, test_data)
+		print('\n Test set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
+		test = 100 * np.mean((predicted_label == test_label).astype(float))
+		
+		if lambdaval == 0:
+                        elapsed_time = time.time() - start_time
+                        timehid.append(elapsed_time)
+		timeboth.append(time.time() - start_time)
+		
+		if h == 50:
+			lam.append(lambdaval)
+			acur.append(validation)
+	
+		lamhid.append((h,lambdaval))
+		acurboth.append(validation)		
+	
+		if test > p_test and validation > p_val and train > p_train:
+			obj = [selected_features, n_hidden, w1, w2, lambdaval]
+			# selected_features is a list of feature indices that you use after removing unwanted features in feature selection step
+			import pickle
 
-# find the accuracy on Validation Dataset
+			pickle.dump(obj, open('params.pickle', 'wb'))
+			p_val = validation
+			p_train = train
+			p_test = test
+			
+			print("\nLambdaval:" +str(lambdaval))
+			print("\nHidden:" +str(n_hidden)) 
+			print("\nP_val:" + str(p_val))
+			print("\nP_train:" + str(p_train))
+			print("\nP_test:" + str(p_test))	
+		
+		
+"""plt.plot(n_hid,timehid)
+plt.title("Time VS Hidden Node")
+plt.ylabel("Time elapsed seconds")
+plt.xlabel("# of Hidden Nodes")
+plt.show()
+plt.savefig("Time & Hidden", bbox_inches = 'tight')
 
-print('\n Test set Accuracy:' + str(100 * np.mean((predicted_label == test_label).astype(float))) + '%')
+plt.plot(lam,acur)
+plt.title("Lambdaval VS Accuracy")	
+plt.ylabel("Accuracy")
+plt.xlabel("Lambda value")
+plt.show()
+plt.savefig("Lambda & Accuracy", bbox_inches = 'tight')
+"""
+file3 = open("Hidden VS Time.csv","w")
+file4 = open("Lambda VS Accuracy.csv","w")
 
-obj = [selected_features, n_hidden, w1, w2, lambdaval]
-# selected_features is a list of feature indices that you use after removing unwanted features in feature selection step
-import pickle
+file3.write("Hidden"+"\t"+"Time"+"\n")
 
-pickle.dump(obj, open('params.pickle', 'wb'))
+for v,x in zip(n_hid,timehid):
+        file3.write(str(v)+"\t"+str(x)+"\n")
 
+
+file4.write("Lambdaval"+"\t"+"Accuracy"+"\n")
+for v,x in zip(lam,acur):
+        file4.write(str(v)+"\t"+str(x)+"\n")
+
+file1 = open("Both and Time.csv","w")
+file2 = open("Both and Accuracy.csv","w")
+
+file1.write("Hidden"+"\t"+"Lambdaval"+"\t"+"Time"+"\n")
+
+for v,x in zip(lamhid,timeboth):
+	file1.write(str(v[0])+"\t"+str(v[1])+"\t"+str(x)+"\n")
+
+
+file2.write("Hidden"+"\t"+"Lambdaval"+"\t"+"Accuracy"+"\n")
+
+for v,x in zip(lamhid,acurboth):
+        file2.write(str(v[0])+"\t"+str(v[1])+"\t"+str(x)+"\n")
+
+"""plt.plot(lamhid,timeboth)
+plt.ylabel("Time in Seconds")
+plt.xlabel("Lambdaval / Hidden")
+plt.show()
+plt.savefig("Both and Time", bbox_inches = 'tight')
+
+plt.plot(lamhid,acurboth)
+plt.ylabel("Accuracy")
+plt.xlabel("Lambdaval / Hidden")
+plt.show()
+plt.savefig("Both and Accuracy", bbox_inches = 'tight')"""
